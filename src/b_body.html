@@ -1,0 +1,172 @@
+<div id="vig" class="vig" aria-hidden="true"></div>
+<main id="app">
+  <!-- 3D scene: always fullscreen. Menu shows it blurred behind the buttons; in-game it is the whole screen. -->
+  <div class="boardwrap is3d" id="boardwrap">
+    <canvas id="gl3" class="gl3" aria-label="3D chess board. Drag to rotate, scroll to zoom."></canvas>
+    <div class="v3ui" id="v3ui"><button type="button" class="btn" id="v3Reset" title="Reset camera">⟲ View</button></div>
+    <div class="v3hint" id="v3hint">Drag to rotate · scroll or pinch to zoom · click to move</div>
+    <div id="hcard" class="hcard" hidden></div>
+    <div id="streakBanner" class="streak" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="promo" class="overlay" hidden>
+      <div class="ovc">
+        <h2>Promote to</h2>
+        <div class="promos" id="promoBtns"></div>
+        <button class="btn" id="promoCancel" type="button">Cancel</button>
+      </div>
+    </div>
+    <div id="over" class="overlay" hidden>
+      <div class="ovc">
+        <h2 id="overTitle">Checkmate</h2>
+        <p id="overTxt"></p>
+        <div id="recap" class="recap"></div>
+        <div class="row">
+          <button class="btn primary" id="rematch" type="button">Rematch</button>
+          <button class="btn" id="overView" type="button">View board</button>
+          <button class="btn" id="overMenu" type="button">Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== main menu ===== -->
+  <section id="menu" class="mnu">
+    <div class="mnu-in">
+      <canvas id="logo" class="logo" width="112" height="62" aria-label="Surge Chess"></canvas>
+      <p class="mnu-sub">10×10 chess · powerups · gold shop · augments</p>
+
+      <div class="mview" id="mvMain">
+        <button type="button" class="ybtn" data-go="play"><span>Play</span></button>
+        <button type="button" class="ybtn" id="mHelp"><span>Help</span></button>
+        <button type="button" class="ybtn" id="mSet"><span>Settings</span></button>
+      </div>
+
+      <div class="mview" id="mvPlay" hidden>
+        <h2 class="mh">Choose a mode</h2>
+        <div class="modegrid">
+          <button type="button" class="mode off" data-mode="pvp"><i>🌐</i><b>PVP</b><span>Queue against random players</span><em>Online · soon</em></button>
+          <button type="button" class="mode off" data-mode="ranked"><i>🏆</i><b>Ranked</b><span>Same queue, with MMR</span><em id="mmrTag">Online · soon</em></button>
+          <button type="button" class="mode" data-go="pvai"><i>🤖</i><b>PvAI</b><span>You against the computer</span></button>
+          <button type="button" class="mode" data-go="aivai"><i>🍿</i><b>AI vs AI</b><span>Sit back and watch</span></button>
+          <button type="button" class="mode" data-mode="local"><i>👥</i><b>2 Player</b><span>Share this computer</span></button>
+        </div>
+        <button type="button" class="back" data-go="main">‹ Back</button>
+      </div>
+
+      <div class="mview" id="mvPvai" hidden>
+        <h2 class="mh">Versus computer</h2>
+        <div class="cfg">
+          <div class="cfgrow"><label>You play</label><div class="seg" id="segSide" role="group" aria-label="Your side"><button type="button" data-v="0" aria-pressed="true">White</button><button type="button" data-v="1" aria-pressed="false">Black</button><button type="button" data-v="r" aria-pressed="false">Random</button></div></div>
+          <div class="cfgrow"><label>Difficulty <b id="lvName">5 · Club player</b></label><div class="sld" id="sldLv"></div></div>
+        </div>
+        <button type="button" class="ybtn small" id="goPvai"><span>Start match</span></button>
+        <button type="button" class="back" data-go="play">‹ Back</button>
+      </div>
+
+      <div class="mview" id="mvAivai" hidden>
+        <h2 class="mh">AI vs AI</h2>
+        <div class="cfg">
+          <div class="cfgrow"><label>White AI <b id="lvWName">5</b></label><div class="sld" id="sldW"></div></div>
+          <div class="cfgrow"><label>Black AI <b id="lvBName">5</b></label><div class="sld" id="sldB"></div></div>
+          <div class="cfgrow"><label>Speed</label><div class="seg" id="segSpd" role="group"><button type="button" data-v="1.8" aria-pressed="false">Slow</button><button type="button" data-v="1" aria-pressed="true">Normal</button><button type="button" data-v="0.25" aria-pressed="false">Fast</button></div></div>
+        </div>
+        <button type="button" class="ybtn small" id="goAivai"><span>Watch match</span></button>
+        <button type="button" class="back" data-go="play">‹ Back</button>
+      </div>
+
+      <button type="button" class="mlink" id="mSim">Sim lab · balance tools</button>
+    </div>
+    <p class="mver">Surge Chess · local build</p>
+  </section>
+
+  <!-- ===== in-game HUD (TFT-style overlay) ===== -->
+  <section id="game" hidden>
+    <div class="hud hud-tl">
+      <div class="turn"><span id="tdot" class="tdot w"></span><span id="turnTxt">White to move</span><em id="chkTxt"></em></div>
+      <div class="surge"><span id="surgeTxt">Next orb in 5</span><span class="pips" id="pips"></span></div>
+    </div>
+    <div class="tgtbar hud-tgt" id="tgtBar" hidden><span id="tgtTxt"></span><button type="button" class="btn" id="tgtCancel">Cancel</button></div>
+    <button type="button" class="hbtn" id="hbBtn" aria-label="Menu" title="Menu"><span></span><span></span><span></span></button>
+
+    <div class="hud hud-log" id="hudLog"><ol class="log" id="log"></ol></div>
+    <div class="skipwrap"><button class="btn primary" id="skipBtn" type="button" hidden>Skip bonus move</button></div>
+
+    <div class="panel shoppanel" id="shopPanel" hidden>
+      <div class="phead"><h3>Shop</h3><span class="shopsub">+5g every turn · kills pay gold</span><button type="button" class="px" data-close="shop" aria-label="Close">✕</button></div>
+      <ul class="shopgrid" id="shopList"></ul>
+    </div>
+    <div class="panel augpanel" id="augPanel" hidden>
+      <div class="phead"><h3>Augments</h3><button type="button" class="px" data-close="aug" aria-label="Close">✕</button></div>
+      <div id="augList"></div>
+    </div>
+
+    <div class="itembar" id="itemBar" hidden><span class="dklbl">Items</span><ul class="shopgrid dkgrid" id="abilList"></ul></div>
+
+    <div class="dock" id="dock">
+      <button type="button" class="dk dk-shop" id="dkShop" title="Shop"><span class="dki"><svg viewBox="0 0 32 32"><path d="M5 9h22l-2 13H7z" fill="currentColor"/><path d="M5 9L4 5H1M11 27h.01M21 27h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/></svg></span><span class="dkl">Shop</span><kbd data-act="shop">P</kbd></button>
+      <div class="purse dkgold" id="goldRow"></div>
+      <button type="button" class="dk dk-aug" id="dkAug" title="Augments"><span class="dki">✨</span><span class="dkl">Augments</span><span class="dkchips" id="dockAug"></span><kbd data-act="aug">A</kbd></button>
+    </div>
+  </section>
+
+  <!-- ===== modals ===== -->
+  <div id="vsOv" hidden aria-hidden="true"><div class="vsbg"></div><div class="vswrap"><div class="vsside vsL"><small>SIDE</small><b id="vsA">WHITE</b></div><div class="vsmid"><div class="vsvs">VS</div></div><div class="vsside vsR"><small>SIDE</small><b id="vsB">BLACK</b></div></div><div class="vsenv"><span id="vsEi"></span><b id="vsEn"></b><em id="vsEd"></em></div></div>
+  <div id="fmModal" class="augov" hidden role="dialog" aria-modal="true"><div class="augbox"><h2>Formation</h2><p class="augsub" id="fmTxt"></p><p style="text-align:center;margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button type="button" id="fmGo" class="augc" style="display:inline-block;min-width:150px">March in formation</button><button type="button" id="fmSolo" class="augc" style="display:inline-block;min-width:150px">Just this pawn</button><button type="button" id="fmCancel" class="augc" style="display:inline-block;min-width:110px">Cancel</button></p></div></div>
+  <div id="bossRew" class="augov" hidden role="dialog" aria-modal="true"><div class="augbox"><h2 id="brTitle">Boss slain</h2><p class="augsub" id="brSub"></p><div class="augs" id="brCards"></div><p style="text-align:center;margin-top:14px"><button type="button" id="brOk" class="augc" style="display:inline-block;min-width:140px">Continue</button></p></div></div>
+  <div id="aug" class="augov" hidden role="dialog" aria-modal="true" aria-labelledby="augTitle"><div class="augbox"><h2 id="augTitle">Choose an augment</h2><p class="augsub">Pick one. It lasts the rest of the game.</p><div class="augs" id="augCards"></div></div></div>
+
+  <div id="pauseM" class="mod" hidden role="dialog" aria-modal="true">
+    <div class="modbox pausebox">
+      <h2>Paused</h2>
+      <button type="button" class="ybtn small" id="pmResume"><span>Resume</span></button>
+      <button type="button" class="ybtn small alt" id="pmOpt"><span>Options</span></button>
+      <button type="button" class="ybtn small alt" id="pmHelp"><span>Help</span></button>
+      <button type="button" class="ybtn small danger" id="pmLeave"><span>Leave game</span></button>
+    </div>
+  </div>
+
+  <div id="leaveM" class="mod" hidden role="dialog" aria-modal="true">
+    <div class="modbox pausebox">
+      <h2>Leave this game?</h2>
+      <p class="fine" style="text-align:center">The match will be lost.</p>
+      <button type="button" class="ybtn small danger" id="lvYes"><span>Leave</span></button>
+      <button type="button" class="ybtn small alt" id="lvNo"><span>Stay</span></button>
+    </div>
+  </div>
+
+  <div id="helpM" class="mod" hidden role="dialog" aria-modal="true" aria-label="Help">
+    <div class="modbox wide">
+      <button type="button" class="mx" data-close="help" aria-label="Close">✕</button>
+      <h2>Help</h2>
+      <div class="tabs" id="helpTabs" role="tablist"></div>
+      <div class="tabbody" id="helpBody"></div>
+    </div>
+  </div>
+
+  <div id="setM" class="mod" hidden role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="modbox wide">
+      <button type="button" class="mx" data-close="set" aria-label="Close">✕</button>
+      <h2>Settings</h2>
+      <div class="tabs" id="setTabs" role="tablist"></div>
+      <div class="tabbody" id="setBody"></div>
+    </div>
+  </div>
+
+  <div id="simM" class="mod" hidden role="dialog" aria-modal="true" aria-label="Sim lab">
+    <div class="modbox wide">
+      <button type="button" class="mx" data-close="sim" aria-label="Close">✕</button>
+      <h2>Sim lab</h2>
+      <p class="fine">Watch the computer play itself, or run many games without graphics and copy the numbers.</p>
+      <fieldset class="field"><legend>White level</legend><div class="seg" id="segSimW" role="group"><button type="button" data-v="easy" aria-pressed="false">Easy</button><button type="button" data-v="normal" aria-pressed="true">Normal</button><button type="button" data-v="hard" aria-pressed="false">Hard</button></div></fieldset>
+      <fieldset class="field"><legend>Black level</legend><div class="seg" id="segSimB" role="group"><button type="button" data-v="easy" aria-pressed="false">Easy</button><button type="button" data-v="normal" aria-pressed="true">Normal</button><button type="button" data-v="hard" aria-pressed="false">Hard</button></div></fieldset>
+      <fieldset class="field"><legend>Watch speed</legend><div class="seg" id="segSimS" role="group"><button type="button" data-v="1.8" aria-pressed="false">Slow</button><button type="button" data-v="1" aria-pressed="true">Normal</button><button type="button" data-v="0.25" aria-pressed="false">Fast</button></div></fieldset>
+      <div class="row"><button class="btn primary" id="simWatch" type="button">Watch match</button></div>
+      <fieldset class="field" style="margin-top:16px"><legend>Bulk run (no graphics)</legend><div class="row"><input id="simN" type="number" min="1" max="100" value="10" aria-label="Number of games" style="width:90px;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:inherit"><button class="btn" id="simBulk" type="button">Run games</button><button class="btn" id="simCopy" type="button" hidden>Copy JSON</button></div></fieldset>
+      <p class="fine" id="simProg"></p>
+      <textarea id="simJson" hidden readonly rows="4" style="width:100%;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:inherit;padding:8px"></textarea>
+      <div id="simOut"></div>
+    </div>
+  </div>
+
+  <div id="fade" aria-hidden="true"></div>
+</main>
