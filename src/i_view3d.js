@@ -133,7 +133,7 @@ function v3Cam(R){
 }
 function v3CamPunch(R,pos,amt,ms){if(!FX.on)return;R.punch={t0:performance.now(),ms:ms||1100,amt:amt||2,x:pos.x,z:pos.z};R.dirty=true;}
 function v3ResetCam(){
-  const R=V3R;if(!R)return;R.az=(G&&G.flip)?Math.PI:0;R.el=(G&&G.env)?.55:.92;R.fov0=(G&&G.env)?50:36;R.cam.fov=R.fov0;R.cam.updateProjectionMatrix();R.cineCam=null;R.rad=22*(N/10)*(R.cam.aspect<1?1.2:1)*((G&&G.env)?.8:1);R.dirty=true;
+  const R=V3R;if(!R)return;R.az=(G&&G.flip)?Math.PI:0;R.el=(G&&G.env)?.55:.92;R.fov0=(G&&G.env)?50:36;R.cam.fov=R.fov0;R.cam.updateProjectionMatrix();R.cineCam=null;{const as=R.cam.aspect,pf=as<1?Math.min(2.2,1+(1/as-1)*.75):1;R.rad=22*(N/10)*pf*((G&&G.env&&as>=1)?.8:1);}R.dirty=true;
 }
 function v3Controls(cv,R){
   const ptrs=new Map();let drag=null,pinch=0;
