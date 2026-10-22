@@ -87,6 +87,7 @@ function uiGameStart(){
   closeAllMods();if(G)G.paused=false;
 }
 function uiToMenu(){
+  if(opts.mode==='mp')mpLeave();
   uiFade(()=>{
     closeAllMods();clearTimeout(aiTimer);clearTimeout(vsTimer);$('vsOv').hidden=true;
     opts.mode='sim';show('menu');mview('mvMain');bgStart();
@@ -107,7 +108,7 @@ function wireMenu(){
   refreshMmr();
   $('menu').addEventListener('click',e=>{
     const go=e.target.closest('[data-go]');
-    if(go){const to=go.dataset.go;mview(to==='main'?'mvMain':to==='play'?'mvPlay':to==='pvai'?'mvPvai':'mvAivai');if(go.classList.contains('back'))sfx('uiback');return;}
+    if(go){const to=go.dataset.go;mview(to==='main'?'mvMain':to==='play'?'mvPlay':to==='pvai'?'mvPvai':to==='custom'?'mvCustom':'mvAivai');if(go.classList.contains('back'))sfx('uiback');return;}
     const m=e.target.closest('[data-mode]');
     if(m){
       const k=m.dataset.mode;
@@ -367,4 +368,4 @@ function lowfpsShow(why,fps){
   requestAnimationFrame(tick);
   setTimeout(()=>{if(V3&&V3.soft)lowfpsShow('soft');},2500);
 })();
-if(/[?&]debug/.test(location.search))window.SCdbg={fn:{onSquare,adminKeyAug,adminShow,spawnBoss,bossAttacked,dragonFly,krakenAttack,babyTick,bossWin,bossTick,dragonBreath,onFire,endTurn,refreshLegal,startTgt,tgtClick,buy,useAbility,ramTick,turretFire,mk,legal,stOf,finishTurn,pickAug,has,aiExtra,igniteZone},sync:()=>sync3d(),play:(m)=>{play(m,"Q");after();},start:(m)=>start(m),opts:()=>opts,AIW:()=>AIW,R:()=>V3R,sqX:(i)=>sqX(i),sqZ:(i)=>sqZ(i),por:(t,c)=>portraitURL(t,c),rl:()=>refreshLegal(),G:()=>G,render:()=>render(),N:()=>N,mv:(i)=>{select(i);return G.selMoves.map(m=>m.t);},ENG,NAMES};
+if(/[?&]debug/.test(location.search))window.SCdbg={fn:{onSquare,adminKeyAug,adminShow,spawnBoss,bossAttacked,dragonFly,krakenAttack,babyTick,bossWin,bossTick,dragonBreath,onFire,endTurn,refreshLegal,startTgt,tgtClick,buy,useAbility,ramTick,turretFire,mk,legal,stOf,finishTurn,pickAug,has,aiExtra,igniteZone},sync:()=>sync3d(),G:()=>G,MPS:()=>MPS,play:(m)=>{play(m,"Q");after();},start:(m)=>start(m),opts:()=>opts,AIW:()=>AIW,R:()=>V3R,sqX:(i)=>sqX(i),sqZ:(i)=>sqZ(i),por:(t,c)=>portraitURL(t,c),rl:()=>refreshLegal(),G:()=>G,render:()=>render(),N:()=>N,mv:(i)=>{select(i);return G.selMoves.map(m=>m.t);},ENG,NAMES};

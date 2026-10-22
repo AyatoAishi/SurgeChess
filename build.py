@@ -3,7 +3,7 @@
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 S='src/'
-files=['c_engine.js','d_game.js','h_models.js','h_models2.js','m_rig.js','f_fx.js','j_audio.js','i_view3d.js','l_env.js','e_ui.js','k_sim.js','n_menu.js','o_prof.js','p_admin.js']
+files=['c_engine.js','d_game.js','h_models.js','h_models2.js','m_rig.js','f_fx.js','j_audio.js','i_view3d.js','l_env.js','e_ui.js','k_sim.js','n_menu.js','o_prof.js','p_admin.js','q_mp.js']
 js="\n".join(open(S+f,encoding='utf-8').read() for f in files)
 head=open(S+'a_head.html',encoding='utf-8').read();body=open(S+'b_body.html',encoding='utf-8').read()
 eng=open(S+'c_engine.js',encoding='utf-8').read().replace('</script','<\\/script')

@@ -531,6 +531,36 @@ body.m-game #menu{display:none!important}
 @media (prefers-reduced-motion:reduce){.logo,.mview,.modbox,.mod,.panel{animation:none}}
 </style>
 <style>#boardwrap .gl3{border-radius:0;box-shadow:none}</style>
+<style>
+.mode.wide{grid-column:1/-1}
+.cuin{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(140,170,220,.35);background:rgba(8,14,28,.7);color:#eaf1ff;font:700 16px var(--fb);outline:none}
+.cuin:focus{border-color:#ffd45e}
+.cukey{font:800 24px ui-monospace,Consolas,monospace;letter-spacing:.28em;text-align:center}
+.cuor{display:flex;align-items:center;gap:10px;color:#8fa3c6;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.cuor::before,.cuor::after{content:"";flex:1;height:1px;background:rgba(140,170,220,.25)}
+.cunote{margin:0;min-height:18px;text-align:center;color:#ffd45e;font-weight:700;font-size:13px}
+.keyrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.keylbl{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a9b9d4;width:100%;text-align:center}
+.keyval{font:800 34px ui-monospace,Consolas,monospace;letter-spacing:.22em;color:#ffd45e;text-shadow:0 2px 10px #000;padding-left:.22em}
+.seats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seat{padding:12px;border-radius:14px;border:1px solid rgba(140,170,220,.3);background:rgba(8,14,28,.55);display:grid;gap:8px;justify-items:center;text-align:center;min-height:96px;align-content:center}
+.seat.me{border-color:#ffd45e;box-shadow:0 0 0 1px #ffd45e55}
+.seat .sd{font:800 11px var(--fb);letter-spacing:.14em;text-transform:uppercase;color:#a9b9d4}
+.seat .sn{font:800 16px var(--fb);color:#fff;word-break:break-word}
+.seat .sn i{font-style:normal;font-size:11px;color:#ffd45e;margin-left:4px}
+.seat.off .sn{opacity:.45}
+.seat .btn,.specs .btn{padding:6px 10px;font-size:12px}
+.specs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.specs li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:10px;background:rgba(8,14,28,.5);font-weight:700;font-size:14px}
+.specs li.none{opacity:.5;justify-content:center}
+#mpBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:34;display:flex;gap:8px;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(10,16,30,.78);border:1px solid rgba(140,170,220,.35);font:700 12px var(--fb);color:#dbe6ff;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#mpBar b{color:#ffd45e}
+#mpBar[hidden]{display:none}
+#mpPause{z-index:140}
+.mpd{margin:0;text-align:center;color:#cfd9ec;font-weight:600;line-height:1.45}
+@media (max-width:520px){.seats{grid-template-columns:1fr}.keyval{font-size:28px}#mpBar{top:56px}}
+</style>
+
 
 <div id="vig" class="vig" aria-hidden="true"></div>
 <main id="app">
@@ -583,8 +613,37 @@ body.m-game #menu{display:none!important}
           <button type="button" class="mode" data-go="pvai"><i>🤖</i><b>PvAI</b><span>You against the computer</span></button>
           <button type="button" class="mode" data-go="aivai"><i>🍿</i><b>AI vs AI</b><span>Sit back and watch</span></button>
           <button type="button" class="mode" data-mode="local"><i>👥</i><b>2 Player</b><span>Share this computer</span></button>
+          <button type="button" class="mode wide" data-go="custom"><i>🔑</i><b>Custom</b><span>Private online 1v1 with a room key · up to 5 spectators</span></button>
         </div>
         <button type="button" class="back" data-go="main">‹ Back</button>
+      </div>
+
+
+      <div class="mview" id="mvCustom" hidden>
+        <h2 class="mh">Custom match</h2>
+        <div class="cfg">
+          <div class="cfgrow"><label>Your name</label><input id="cuName" class="cuin" maxlength="14" placeholder="Player" autocomplete="off" spellcheck="false"></div>
+          <button type="button" class="ybtn small" id="cuCreate"><span>Create room</span></button>
+          <div class="cuor"><span>or join with a key</span></div>
+          <div class="cfgrow"><input id="cuKey" class="cuin cukey" maxlength="6" placeholder="Room key" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <button type="button" class="ybtn small alt" id="cuJoin"><span>Join room</span></button>
+          <button type="button" class="ybtn small alt" id="cuRejoin" hidden><span>Rejoin last room</span></button>
+          <p class="cunote" id="cuNote"></p>
+        </div>
+        <button type="button" class="back" data-go="play">‹ Back</button>
+      </div>
+
+      <div class="mview" id="mvLobby" hidden>
+        <h2 class="mh">Room lobby</h2>
+        <div class="cfg lob">
+          <div class="keyrow"><span class="keylbl">Room key</span><b id="lbKey" class="keyval">------</b><button type="button" class="btn" id="lbCopy">Copy key</button><button type="button" class="btn" id="lbLink">Copy link</button></div>
+          <div class="seats"><div class="seat" id="seat0"></div><div class="seat" id="seat1"></div></div>
+          <div class="cfgrow"><label>Spectators <b id="lbSpecN">0/5</b></label><ul id="lbSpec" class="specs"></ul></div>
+          <div class="cfgrow" id="lbEnvRow"><label>Environment <b id="lbEnvV"></b></label><div class="seg" id="lbEnv"><button type="button" data-v="random" aria-pressed="true">Random</button><button type="button" data-v="volcano" aria-pressed="false">Volcano</button><button type="button" data-v="sky" aria-pressed="false">Sky</button><button type="button" data-v="rain" aria-pressed="false">Rain</button></div></div>
+          <p class="cunote" id="lbNote"></p>
+        </div>
+        <button type="button" class="ybtn small" id="lbStart"><span>Start match</span></button>
+        <button type="button" class="back" id="lbLeave">‹ Leave room</button>
       </div>
 
       <div class="mview" id="mvPvai" hidden>
@@ -649,6 +708,8 @@ body.m-game #menu{display:none!important}
   <div id="bossRew" class="augov" hidden role="dialog" aria-modal="true"><div class="augbox"><h2 id="brTitle">Boss slain</h2><p class="augsub" id="brSub"></p><div class="augs" id="brCards"></div><p style="text-align:center;margin-top:14px"><button type="button" id="brOk" class="augc" style="display:inline-block;min-width:140px">Continue</button></p></div></div>
   <div id="aug" class="augov" hidden role="dialog" aria-modal="true" aria-labelledby="augTitle"><div class="augbox"><h2 id="augTitle">Choose an augment</h2><p class="augsub">Pick one. It lasts the rest of the game.</p><div class="augs" id="augCards"></div></div></div>
 
+  <div id="mpBar" hidden></div>
+  <div id="mpPause" class="mod" hidden role="dialog" aria-modal="true"><div class="modbox pausebox"><h2 id="mpPT">Paused</h2><p id="mpPD" class="mpd"></p><button type="button" class="ybtn small danger" id="mpPLeave"><span>Leave room</span></button></div></div>
   <div id="pauseM" class="mod" hidden role="dialog" aria-modal="true">
     <div class="modbox pausebox">
       <h2>Paused</h2>
@@ -1309,6 +1370,8 @@ const BOSS_MAX={V:5,D:7,K:6},BOSS_NAME={V:'Vanguard',D:'Dragon',K:'Kraken'};
 const ENVS=['volcano','sky','rain'];
 const safeRow=r=>r===homeRow(0)||r===pawnRow(0)||r===homeRow(1)||r===pawnRow(1);
 const isAI=c=>opts.mode==='sim'||(opts.mode==='ai'&&c!==opts.human);
+const locked=c=>isAI(c)||(opts.mode==='mp'&&mpSeat()!==c);   // true when the local player may not act for side c
+const MPG=()=>opts.mode==='mp'&&!mpIsHost();                  // online guest: forwards actions to the host instead of running them
 const lvlOf=c=>G&&G.bg?G.bgLv[c]:opts.mode==='sim'?opts.lv[c]:opts.level;
 
 function newStats(){return{k:[{},{}],d:[{},{}],cl:[{},{}],orbs:[{},{}],buys:[{},{}],gold:[0,0],sac:[0,0],gm:[0,0],str:[0,0],ft:[0,0],contest:[0,0],slam:0,tp:null,lead:0,mateBy:null};}
@@ -1318,7 +1381,7 @@ function newGame(){
   setN(10);
   G={b:newBoard(),pw:Array(N*N).fill(null),gold:[5,0],aug:[[],[]],used:[{},{}],draft:null,draftQ:[],fire:null,portals:null,inv:[{turret:0,polarity:0,archer:0,ram:0},{turret:0,polarity:0,archer:0,ram:0}],mv:[],xu:false,xt:false,cd:[{},{}],boss:{on:false,done:false,sq:-1,hits:[0,0],kind:null,max:5,nextAt:80,act:0},df:[],baby:[],babyQ:[],fort:[0,0],gm:[],orbMem:0,stats:newStats(),killer:null,streak:[0,0],burn:[null,null],fb:false,tgt:null,rezQ:[],meteors:[],mines:[],hist:[],ban:null,env:(opts.env&&ENVS.includes(opts.env))?opts.env:(/[?&]env=(\w+)/.exec(location.search)||[])[1]&&ENVS.includes((/[?&]env=(\w+)/.exec(location.search)||[])[1])?(/[?&]env=(\w+)/.exec(location.search)||[])[1]:ENVS[rnd(ENVS.length)],cr:[],pd:[],bonusNoCap:false,rz:[0,0],chute:false,orbSeq:Array(N*N).fill(0),orbN:0,nextOrb:ORB_MIN+rnd(ORB_MAX-ORB_MIN+1),ep:null,turn:0,ply:0,bonus:null,over:null,overHidden:false,
      last:null,sel:null,selMoves:[],promo:null,fx:[],overFx:false,freshP:new Set(),freshO:new Set(),log:[],legal:[],thinking:false,
-     flip:opts.mode==='ai'&&opts.human===1};
+     flip:(opts.mode==='ai'||opts.mode==='mp')&&opts.human===1};
   ENG.cp=[false,false];ENG.ag=[false,false];ENG.ply=0;ENG.fire=false;
   refreshLegal();
 }
@@ -4752,6 +4815,7 @@ function unitsHtml(){
 }
 
 function render(){
+  if(opts.mode==='mp')mpBroadcast();
   const flip=G.flip,dest=new Map(G.selMoves.map(m=>[m.t,m]));
   const chkSq=inCheck(stOf())?kingSq(G.b,G.turn):-1;
   const tgtV=G.tgt?G.tgt.valid:null,mtSet=new Set(),mtCtr=new Set();for(const m of G.meteors){mtCtr.add(m.sq);for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const rr=rowOf(m.sq)+dr,cc=colOf(m.sq)+dc;if(rr>=0&&rr<N&&cc>=0&&cc<N)mtSet.add(rr*N+cc);}}
@@ -4772,13 +4836,14 @@ function render(){
     if(G.overDelay)setTimeout(()=>{if(G!==g0)return;g0.overDelay=0;render();},G.overDelay);
   }
 
-  const ai=isAI(G.turn)&&!G.over;
+  const ai=isAI(G.turn)&&!G.over,lk=locked(G.turn)&&!G.over;
   $('tdot').className='tdot '+(G.turn===0?'w':'b');
   let tt=SIDE[G.turn]+' to move';
   if(G.over)tt='Game over';
   else if(G.xt)tt=SIDE[G.turn]+': extra move (different piece)';
   else if(G.bonus!=null)tt=SIDE[G.turn]+': bonus move';
   else if(ai)tt='Computer is thinking';
+  if(opts.mode==='mp'&&!G.over&&!G.xt&&G.bonus==null)tt=mpTurnTxt();
   $('turnTxt').textContent=tt;
   $('chkTxt').textContent=!G.over&&chkSq>=0?'Check':'';
   $('surgeTxt').textContent='Orbs '+G.pw.filter(Boolean).length+'/'+MAX_ORBS+' · White '+G.gold[0]+'g · Black '+G.gold[1]+'g';
@@ -4786,7 +4851,7 @@ function render(){
   renderShop();renderAug();
   driveDraft();
   $('log').innerHTML=G.log.slice(0,8).map(e=>'<li class="'+e.k+'">'+e.t+'</li>').join('');
-  $('skipBtn').hidden=!((G.bonus!=null||G.xt)&&!ai);
+  $('skipBtn').hidden=!((G.bonus!=null||G.xt)&&!lk);
 
   $('tgtBar').hidden=!G.tgt;
   if(G.tgt){const T={polar:G.tgt.step?'Polarity: pick the unit to swap with.':'Polarity: pick the first unit.',turret:'Turret: pick an empty tile touching one of your pieces.',ram:'Battering Ram: pick a free tile on your home rank.',archer:'Archer: pick an empty tile directly behind one of your pawns.',wall:'Castle Wall: pick an empty tile. A wall of up to 3 blocks is built across it.',deploy:'Deploy Pawn: pick the centre of a plus-shaped 5-pawn block on your half.',blink:G.tgt.step?'Phase Step: pick an empty square within 3 tiles.':'Phase Step: pick a piece to teleport.',meteor:'Falling Star: pick the centre of a 3×3 area on the enemy half.',frost:'Winter’s Grasp: pick the centre of a 3×3 area.',zhonya:"Frozen Moment: pick one of your pieces."};$('tgtTxt').textContent=T[G.tgt.kind];$('tgtCancel').textContent=G.tgt.forced?'Random spot':'Cancel';}
@@ -4797,8 +4862,9 @@ function render(){
   $('over').hidden=!G.over||G.overHidden||!!G.overDelay;
   if(G.over){
     const o=G.over;$('recap').innerHTML=recapHtml();
-    $('overTitle').textContent=o.type==='mate'?'Checkmate':o.type==='stalemate'?'Stalemate':'Draw';
-    $('overTxt').textContent=o.type==='mate'?SIDE[o.winner]+' wins'+(opts.mode==='ai'?(o.winner===opts.human?'. Nice one.':'. The computer got you.'):'.'):o.type==='stalemate'?SIDE[G.turn]+' has no legal move and is not in check.':'Only the two kings are left.';
+    $('overTitle').textContent=o.type==='mate'?'Checkmate':o.type==='stalemate'?'Stalemate':o.type==='forfeit'?'Forfeit':'Draw';
+    $('overTxt').textContent=o.type==='forfeit'?SIDE[o.winner]+' wins. The other player did not come back in time.':o.type==='mate'?SIDE[o.winner]+' wins'+(opts.mode==='ai'?(o.winner===opts.human?'. Nice one.':'. The computer got you.'):'.'):o.type==='stalemate'?SIDE[G.turn]+' has no legal move and is not in check.':'Only the two kings are left.';
+    mpOverUi();
   }
 }
 
@@ -4824,7 +4890,7 @@ function buildShop(){
 }
 function renderShop(){
   if(!shopBuilt)buildShop();
-  const c=G.turn,human=!isAI(c)&&canShop();
+  const c=G.turn,human=!locked(c)&&canShop();
   $('goldRow').innerHTML=[0,1].map(s=>'<span class="'+(c===s?'on':'')+'" data-s="'+s+'"><i class="coin"></i>'+SIDE[s]+' <b>'+G.gold[s]+'</b></span>').join('');
   for(const s of[0,1]){if(lastGold[s]>=0&&lastGold[s]!==G.gold[s]){const e=$('goldRow').querySelector('[data-s="'+s+'"]');if(e&&FX.on)e.animate([{transform:'scale(1)'},{transform:'scale(1.16)',offset:.35},{transform:'scale(1)'}],{duration:380,easing:'ease-out'});}lastGold[s]=G.gold[s];}
   for(const li of $('shopList').children){
@@ -4871,14 +4937,14 @@ function renderAug(){
     $('brCards').innerHTML=rw.keys.map(k=>{const a=AUG[k];return'<div class="augc t-'+a.t+'"><span class="aug-t">'+TIER[a.t]+'</span><span class="aug-i">'+a.i+'</span><strong>'+a.n+'</strong><span class="aug-d">'+a.d+'</span></div>';}).join('');}
   const d=G.draft;$('aug').hidden=!d;
   if(d){
-    const ai=isAI(d.side);
+    const ai=locked(d.side);
     $('augTitle').textContent=SIDE[d.side]+(ai?' is choosing an augment…':': choose an augment');
     $('augCards').innerHTML=d.opts.map(k=>{const a=AUG[k];return'<button type="button" class="augc t-'+a.t+'" data-k="'+k+'"'+(ai?' disabled':'')+'><span class="aug-t">'+TIER[a.t]+'</span><span class="aug-i">'+a.i+'</span><strong>'+a.n+'</strong><span class="aug-d">'+a.d+'</span></button>';}).join('');
   }
   const next=AUG_EVERY-(G.ply%AUG_EVERY);
   $('augList').innerHTML=[0,1].map(s=>'<div class="augrow"><b>'+SIDE[s]+'</b><span class="chips">'+(G.aug[s].length?G.aug[s].map(k=>'<span class="chip t-'+AUG[k].t+(AUG[k].act&&G.used[s][k]?' spent':'')+'" title="'+AUG[k].d.replace(/"/g,'&quot;')+'">'+AUG[k].i+' '+AUG[k].n+'</span>').join(''):'<em>none yet</em>')+'</span></div>').join('')+'<p class="fine">Next augment pick in '+next+' turns.</p>';
   const dc=$('dockAug');if(dc)dc.innerHTML=[0,1].map(sd=>G.aug[sd].map(k=>'<span title="'+SIDE[sd]+': '+AUG[k].n+'">'+AUG[k].i+'</span>').join('')).join('')||'<span style="opacity:.45">none</span>';
-  const c=G.turn,show=!isAI(c)&&!G.over,ab=show?G.aug[c].filter(k=>AUG[k].act&&!G.used[c][k]):[];
+  const c=G.turn,show=!locked(c)&&!G.over,ab=show?G.aug[c].filter(k=>AUG[k].act&&!G.used[c][k]):[];
   const tn=show?G.inv[c].turret:0,pn=show?G.inv[c].polarity:0,an=show?G.inv[c].archer:0,rn=show?G.inv[c].ram:0;
   const hasIt=!!(ab.length||tn||pn||an||rn);$('itemBar').hidden=!hasIt;$('game').classList.toggle('has-items',hasIt);
   const tur=tn?'<li><button type="button" class="item i-ab" data-a="turret" title="Place a turret next to any of your pieces"'+(canShop()?'':' disabled')+'><span class="ico">'+ICON.t+'</span><span class="txt"><strong>Turret x'+tn+'</strong><span class="d">Place beside an ally. 25% auto-shot per turn in its 5×5 box, 3 shots.</span></span><span class="price"><b>Place</b></span></button></li>':'';
@@ -4900,7 +4966,7 @@ function whyIllegal(f,t){
 }
 function select(i){G.sel=i;G.selMoves=G.legal.filter(m=>m.f===i);}
 function after(){
-  if(!G.over&&G.bonus!=null&&!isAI(G.turn))select(G.bonus);
+  if(!G.over&&G.bonus!=null&&!locked(G.turn))select(G.bonus);
   render();
   clearTimeout(aiTimer);
   if(!G.over&&isAI(G.turn)){
@@ -4908,16 +4974,20 @@ function after(){
     aiTimer=setTimeout(aiStep,wait*(G.bg?.85:opts.mode==='sim'?(opts.spd||1):1));
   }
 }
-function commit(m,t){play(m,t);after();}
+function commit(m,t){
+  if(MPG()){mpSend({k:'play',f:m.f,t:m.t,fl:m.fl||0,pr:t,fm:m.grp?1:0});G.sel=null;G.selMoves=[];G.promo=null;render();return;}
+  play(m,t);after();
+}
 
 function onSquare(i){
   if(G&&G.holdUntil&&performance.now()<G.holdUntil)return;
   if(!G||G.over||G.promo||G.draft||G.reward||G.paused||G.bg)return;
   if(adminSquare(i))return;
-  if(G.tgt){if(isAI(G.tgt.c))return;if(!tgtClick(i))toastFn('Pick one of the highlighted squares.','n');flow();return;}
-  if(isAI(G.turn))return;
-  if(G.bonus!=null&&G.bonusNoCap&&i===G.bonus){skipBonus();after();return;}
+  if(G.tgt){if(locked(G.tgt.c))return;if(MPG()){mpSend({k:'sq',i});return;}if(!tgtClick(i))toastFn('Pick one of the highlighted squares.','n');flow();return;}
+  if(locked(G.turn))return;
+  if(G.bonus!=null&&G.bonusNoCap&&i===G.bonus){if(MPG()){mpSend({k:'skip'});return;}skipBonus();after();return;}
   if(G.chute){
+    if(MPG()){mpSend({k:'sq',i});return;}
     if(!doChute(i)){G.chute=false;toastFn('Parachute cancelled. Pick a highlighted square next time.','n');}
     render();return;
   }
@@ -5021,7 +5091,7 @@ function showVs(){
   const o=$('vsOv');if(!o||!G||G.bg)return;
   const E=ENV_INFO[G.env];if(!E)return;
   const lvT=c=>'AI · LV '+lvNum(lvlOf(c));
-  $('vsA').textContent=opts.mode==='ai'?(opts.human===0?'YOU':lvT(0)):opts.mode==='sim'?lvT(0):SIDE[0].toUpperCase();$('vsB').textContent=opts.mode==='ai'?(opts.human===1?'YOU':lvT(1)):opts.mode==='sim'?lvT(1):SIDE[1].toUpperCase();
+  $('vsA').textContent=opts.mode==='mp'?mpName(0).toUpperCase():opts.mode==='ai'?(opts.human===0?'YOU':lvT(0)):opts.mode==='sim'?lvT(0):SIDE[0].toUpperCase();$('vsB').textContent=opts.mode==='mp'?mpName(1).toUpperCase():opts.mode==='ai'?(opts.human===1?'YOU':lvT(1)):opts.mode==='sim'?lvT(1):SIDE[1].toUpperCase();
   $('vsEi').textContent=E.i;$('vsEn').textContent=E.n;$('vsEd').textContent=E.d;
   o.style.setProperty('--vsc',E.c);o.style.setProperty('--vs1',E.a);o.style.setProperty('--vs2',E.b);
   o.classList.remove('out');o.hidden=false;G.holdUntil=performance.now()+3300;
@@ -5035,18 +5105,18 @@ $('promoBtns').addEventListener('click',e=>{
   const m=G.promo;G.promo=null;commit(m,b.dataset.t);
 });
 $('promoCancel').addEventListener('click',()=>{G.promo=null;render();});
-$('shopList').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G||isAI(G.turn))return;const k=b.dataset.k,ok=buy(k);if(ok&&k!=='ch')shopFx(b,k);render();});
-$('augCards').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G.draft||isAI(G.draft.side))return;sfx('pick');pickAug(b.dataset.k);flow();});
-$('abilList').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b||!G||isAI(G.turn))return;useAbility(b.dataset.a);flow();});
-$('tgtCancel').addEventListener('click',()=>{if(G&&G.tgt){cancelTgt();flow();}});
-$('skipBtn').addEventListener('click',()=>{if((G.bonus!=null||G.xt)&&!isAI(G.turn)){skipBonus();after();}});
-$('rematch').addEventListener('click',()=>uiFade(()=>start(opts.mode)));
+$('shopList').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G||locked(G.turn))return;const k=b.dataset.k;if(MPG()){mpSend({k:'buy',b:k});return;}const ok=buy(k);if(ok&&k!=='ch')shopFx(b,k);render();});
+$('augCards').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G.draft||locked(G.draft.side))return;sfx('pick');if(MPG()){mpSend({k:'aug',a:b.dataset.k});return;}pickAug(b.dataset.k);flow();});
+$('abilList').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b||!G||locked(G.turn))return;if(MPG()){mpSend({k:'abil',a:b.dataset.a});return;}useAbility(b.dataset.a);flow();});
+$('tgtCancel').addEventListener('click',()=>{if(G&&G.tgt){if(locked(G.tgt.c))return;if(MPG()){mpSend({k:'tgtCancel'});return;}cancelTgt();flow();}});
+$('skipBtn').addEventListener('click',()=>{if((G.bonus!=null||G.xt)&&!locked(G.turn)){if(MPG()){mpSend({k:'skip'});return;}skipBonus();after();}});
+$('rematch').addEventListener('click',()=>{if(opts.mode==='mp'){mpRematch();return;}uiFade(()=>start(opts.mode));});
 $('overMenu').addEventListener('click',()=>uiToMenu());
 $('overView').addEventListener('click',()=>{G.overHidden=true;render();});
 
 $('v3Reset').addEventListener('click',()=>{v3ResetCam();});
 v3Boot();
-$('brOk').addEventListener('click',()=>{if(G){G.reward=null;render();}});
+$('brOk').addEventListener('click',()=>{if(!G||!G.reward||locked(G.reward.side))return;if(MPG()){mpSend({k:'brOk'});return;}G.reward=null;render();});
 $('fmGo').addEventListener('click',()=>{const f=G.fm;$('fmModal').hidden=true;G.fm=null;if(f)commit(Object.assign({},f.m,{grp:f.grp}),'Q');});
 $('fmSolo').addEventListener('click',()=>{const f=G.fm;$('fmModal').hidden=true;G.fm=null;if(f)commit(f.m,'Q');});
 $('fmCancel').addEventListener('click',()=>{$('fmModal').hidden=true;G.fm=null;render();});
@@ -5237,6 +5307,7 @@ function uiGameStart(){
   closeAllMods();if(G)G.paused=false;
 }
 function uiToMenu(){
+  if(opts.mode==='mp')mpLeave();
   uiFade(()=>{
     closeAllMods();clearTimeout(aiTimer);clearTimeout(vsTimer);$('vsOv').hidden=true;
     opts.mode='sim';show('menu');mview('mvMain');bgStart();
@@ -5257,7 +5328,7 @@ function wireMenu(){
   refreshMmr();
   $('menu').addEventListener('click',e=>{
     const go=e.target.closest('[data-go]');
-    if(go){const to=go.dataset.go;mview(to==='main'?'mvMain':to==='play'?'mvPlay':to==='pvai'?'mvPvai':'mvAivai');if(go.classList.contains('back'))sfx('uiback');return;}
+    if(go){const to=go.dataset.go;mview(to==='main'?'mvMain':to==='play'?'mvPlay':to==='pvai'?'mvPvai':to==='custom'?'mvCustom':'mvAivai');if(go.classList.contains('back'))sfx('uiback');return;}
     const m=e.target.closest('[data-mode]');
     if(m){
       const k=m.dataset.mode;
@@ -5517,7 +5588,7 @@ function lowfpsShow(why,fps){
   requestAnimationFrame(tick);
   setTimeout(()=>{if(V3&&V3.soft)lowfpsShow('soft');},2500);
 })();
-if(/[?&]debug/.test(location.search))window.SCdbg={fn:{onSquare,adminKeyAug,adminShow,spawnBoss,bossAttacked,dragonFly,krakenAttack,babyTick,bossWin,bossTick,dragonBreath,onFire,endTurn,refreshLegal,startTgt,tgtClick,buy,useAbility,ramTick,turretFire,mk,legal,stOf,finishTurn,pickAug,has,aiExtra,igniteZone},sync:()=>sync3d(),play:(m)=>{play(m,"Q");after();},start:(m)=>start(m),opts:()=>opts,AIW:()=>AIW,R:()=>V3R,sqX:(i)=>sqX(i),sqZ:(i)=>sqZ(i),por:(t,c)=>portraitURL(t,c),rl:()=>refreshLegal(),G:()=>G,render:()=>render(),N:()=>N,mv:(i)=>{select(i);return G.selMoves.map(m=>m.t);},ENG,NAMES};
+if(/[?&]debug/.test(location.search))window.SCdbg={fn:{onSquare,adminKeyAug,adminShow,spawnBoss,bossAttacked,dragonFly,krakenAttack,babyTick,bossWin,bossTick,dragonBreath,onFire,endTurn,refreshLegal,startTgt,tgtClick,buy,useAbility,ramTick,turretFire,mk,legal,stOf,finishTurn,pickAug,has,aiExtra,igniteZone},sync:()=>sync3d(),G:()=>G,MPS:()=>MPS,play:(m)=>{play(m,"Q");after();},start:(m)=>start(m),opts:()=>opts,AIW:()=>AIW,R:()=>V3R,sqX:(i)=>sqX(i),sqZ:(i)=>sqZ(i),por:(t,c)=>portraitURL(t,c),rl:()=>refreshLegal(),G:()=>G,render:()=>render(),N:()=>N,mv:(i)=>{select(i);return G.selMoves.map(m=>m.t);},ENG,NAMES};
 
 /* ===== Performance profiler: F3 (or ?fps) toggles. Panel has [Copy log] / [Reset]. ===== */
 const PF={on:false,secs:{},ev:[],spikes:[],tl:[],gaps:[],lt:[],orig:{},t0:0,last:0,tickAcc:{},gpu:null,gq:[],gpuAcc:0,gpuN:0,gpuMax:0,info0:null,heap0:0,heapPrev:0,drag:0,el:null,raf:0,secT:0,secN:0,secMax:0,secGpu:0,secGpuN:0,secCpu:0,frames:0,cpuSum:0,lastFps:0};
@@ -5710,6 +5781,297 @@ function adminKeyAug(){
   if(dbl){ADM.last=0;togglePanel('aug',false);adminShow(!adminOpen());return true;}
   return false;
 }
+
+/* ===== Custom mode: private online 1v1 rooms (host-authoritative relay) =====
+   The room creator's browser runs the real game. Every render it pushes a snapshot through the relay
+   server to everyone else. Guests never run game logic: they send intents (move, buy, pick...) and the
+   host validates and applies them. Spectators just receive snapshots. */
+const MP_DEFAULT_URL='wss://surgechess-rooms.onrender.com';
+const MPS={on:false,ws:null,key:'',you:null,token:null,host:false,seat:-1,room:null,mid:null,curMid:null,
+  lastSent:'',manualClose:false,pend:null,fading:false,recT:0,recN:0,pingT:0,pauseT:0,down:false,name:''};
+const MP_LOCAL=['hist','sel','selMoves','promo','fm','overSeen','fallenOn','overDelay','overHidden','killcam','holdUntil','flip','thinking','aiBusy','paused'];
+const mpSeat=()=>MPS.seat,mpIsHost=()=>MPS.host;
+const mpRep=(k,v)=>v instanceof Set?{__set:[...v]}:v;
+const mpRev=(k,v)=>v&&typeof v==='object'&&Array.isArray(v.__set)?new Set(v.__set):v;
+function mpUrl(){const q=/[?&]mp=([^&]+)/.exec(location.search);return q?decodeURIComponent(q[1]):MP_DEFAULT_URL;}
+const mpMember=id=>MPS.room&&MPS.room.members.find(m=>m.id===id);
+function mpName(side){const r=MPS.room;if(!r)return SIDE[side];const m=mpMember(r.seats[side]);return m?m.name:SIDE[side];}
+function mpTurnTxt(){
+  const me=MPS.seat;
+  if(me===G.turn)return 'Your move ('+SIDE[G.turn]+')';
+  return mpName(G.turn)+' ('+SIDE[G.turn]+') to move';
+}
+const mpStore=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}return null;};
+
+/* ---------- socket ---------- */
+function mpSend(d){if(MPS.ws&&MPS.ws.readyState===1)MPS.ws.send(JSON.stringify({t:'intent',d}));}
+function mpRaw(o){if(MPS.ws&&MPS.ws.readyState===1)MPS.ws.send(JSON.stringify(o));}
+function mpConnect(first){
+  return new Promise((res,rej)=>{
+    mpCloseSock();MPS.manualClose=false;
+    let ws;try{ws=new WebSocket(mpUrl());}catch(e){rej(new Error('bad url'));return;}
+    MPS.ws=ws;let opened=false,done=false;
+    const to=setTimeout(()=>{if(!opened){try{ws.close();}catch(e){}if(!done){done=true;rej(new Error('The server did not answer. It may be waking up, try again.'));}}},70000);
+    ws.onopen=()=>{opened=true;clearTimeout(to);ws.send(JSON.stringify(first));clearInterval(MPS.pingT);MPS.pingT=setInterval(()=>mpRaw({t:'ping'}),20000);};
+    ws.onmessage=e=>{
+      let d;try{d=JSON.parse(e.data,mpRev);}catch(x){return;}
+      if(ws!==MPS.ws)return;
+      if(!done&&(d.t==='joined'||d.t==='err')){done=true;if(d.t==='err'){rej(Object.assign(new Error(d.msg||d.code),{code:d.code}));return;}MPS.on=true;mpOnMsg(d);res(d);return;}
+      mpOnMsg(d);
+    };
+    ws.onclose=()=>{clearTimeout(to);if(!done){done=true;rej(new Error('Could not reach the server.'));}mpOnClose(ws);};
+    ws.onerror=()=>{};
+  });
+}
+function mpCloseSock(){clearInterval(MPS.pingT);const w=MPS.ws;MPS.ws=null;if(w){try{w.onclose=null;w.close();}catch(e){}}}
+function mpReset(){
+  MPS.on=false;MPS.key='';MPS.you=null;MPS.token=null;MPS.host=false;MPS.seat=-1;MPS.room=null;MPS.mid=null;MPS.curMid=null;MPS.lastSent='';MPS.pend=null;MPS.fading=false;MPS.down=false;
+  clearTimeout(MPS.recT);clearInterval(MPS.pauseT);mpStore('surgeMp',null);
+  $('mpPause').hidden=true;$('mpBar').hidden=true;
+}
+function mpLeave(){
+  MPS.manualClose=true;mpRaw({t:'leave'});mpCloseSock();mpReset();
+}
+function mpOnClose(ws){
+  if(ws!==MPS.ws)return;
+  MPS.ws=null;clearInterval(MPS.pingT);
+  if(MPS.manualClose||!MPS.on)return;
+  MPS.down=true;MPS.recN=0;mpUi();mpRetry();
+}
+function mpRetry(){
+  clearTimeout(MPS.recT);
+  if(!MPS.on)return;
+  MPS.recN++;
+  if(MPS.recN>45){mpGone('Lost the connection to the room.');return;}
+  mpConnect({t:'join',key:MPS.key,token:MPS.token,name:MPS.name}).then(d=>{MPS.down=false;mpUi();}).catch(e=>{
+    if(e.code==='nokey'||e.code==='full'){mpGone('The room no longer exists.');return;}
+    MPS.recT=setTimeout(mpRetry,2500);
+  });
+}
+function mpGone(msg){
+  const inGame=opts.mode==='mp'&&!$('game').hidden;
+  mpCloseSock();mpReset();toastFn(msg,'r');mpNote('cuNote',msg);
+  if(inGame)uiToMenu();else{mview('mvCustom');}
+}
+
+/* ---------- messages ---------- */
+function mpOnMsg(d){
+  switch(d.t){
+    case 'joined':
+      MPS.you=d.you;MPS.token=d.token;MPS.key=d.key;
+      mpStore('surgeMp',JSON.stringify({key:d.key,token:d.token}));
+      break;
+    case 'room':{
+      MPS.room=d;MPS.host=d.host===MPS.you;MPS.seat=d.seats.indexOf(MPS.you);
+      if(d.status==='lobby'&&opts.mode==='mp'&&!$('game').hidden){mpToLobby();return;}
+      mpLobbyRender();mpUi();break;
+    }
+    case 'start':mpOnStart(d.env);break;
+    case 'snap':
+      if(MPS.host){if(d.restore&&(!G||opts.mode!=='mp'))mpApply(d.d,true);}
+      else mpApply(d.d);
+      break;
+    case 'resume':if(MPS.host){if((!G||opts.mode!=='mp')&&d.snap)mpApply(d.snap,true);else{MPS.lastSent='';mpBroadcast();}}break;
+    case 'intent':if(MPS.host)mpIntent(d.seat,d.d);break;
+    case 'forfeit':mpForfeit(d);break;
+    case 'kicked':mpCloseSock();mpReset();toastFn('You were removed from the room.','r');if(opts.mode==='mp'&&!$('game').hidden)uiToMenu();else mview('mvPlay');break;
+    case 'closed':if(MPS.on){mpGone('The host closed the room.');}break;
+    case 'err':mpNote('lbNote',d.msg||d.code);toastFn(d.msg||d.code,'r');break;
+  }
+}
+function mpForfeit(d){
+  if(!G||opts.mode!=='mp'||G.over)return;
+  G.over={type:'forfeit',winner:d.winner};G.overSeen=true;G.overDelay=0;
+  render();
+}
+
+/* ---------- host: snapshot out ---------- */
+function mpPack(){
+  const g={};for(const k in G)if(!MP_LOCAL.includes(k))g[k]=G[k];
+  return{mid:MPS.mid,g,eng:ENG,n:N};
+}
+function mpBroadcast(){
+  if(!MPS.on||!MPS.host||opts.mode!=='mp'||!G||!MPS.ws||MPS.ws.readyState!==1||MPS.fading)return;
+  const s=JSON.stringify({t:'snap',d:mpPack(),over:!!G.over},mpRep);
+  if(s===MPS.lastSent)return;MPS.lastSent=s;MPS.ws.send(s);
+}
+/* ---------- guest/spectator: snapshot in ---------- */
+function mpApply(s,asHost){
+  if(MPS.fading){MPS.pend=s;return;}
+  const fresh=s.mid!==MPS.curMid||!G||opts.mode!=='mp'||$('game').hidden;
+  if(fresh){
+    if(UIF.busy){setTimeout(()=>mpApply(s,asHost),300);return;}
+    MPS.fading=true;MPS.pend=s;
+    uiGo(()=>{MPS.fading=false;const p=MPS.pend;MPS.pend=null;if(p)mpApplyNow(p,true,asHost);});
+    return;
+  }
+  mpApplyNow(s,false,asHost);
+}
+function mpApplyNow(s,fresh,asHost){
+  const old=G,g=s.g;
+  Object.assign(ENG,s.eng);if(s.n&&s.n!==N)setN(s.n);
+  if(fresh){
+    MPS.curMid=s.mid;MPS.mid=s.mid;opts.mode='mp';opts.human=MPS.seat>=0?MPS.seat:0;
+    clearTimeout(aiTimer);
+    g.hist=g.hist||[];g.sel=null;g.selMoves=[];g.promo=null;g.flip=MPS.seat===1;g.killcam=opts.killcam!==false;
+    G=g;v3Reset();show('game');mpUi();after();showVs();uiGameStart();
+    return;
+  }
+  for(const k of MP_LOCAL)if(old&&k in old)g[k]=old[k];
+  G=g;
+  if(G.sel!=null){
+    const ms=G.legal.filter(m=>m.f===G.sel);
+    if(G.turn===MPS.seat&&ms.length&&(G.bonus==null||G.bonus===G.sel))G.selMoves=ms;
+    else{G.sel=null;G.selMoves=[];G.promo=null;}
+  }
+  mpUi();after();
+}
+
+/* ---------- host: intents in ---------- */
+function mpIntent(seat,d){
+  if(!G||G.over||opts.mode!=='mp'||!d||seat<0)return;
+  switch(d.k){
+    case 'play':{
+      if(G.turn!==seat||G.draft||G.tgt||G.reward)return;
+      const m=G.legal.find(x=>x.f===d.f&&x.t===d.t&&(x.fl||0)===(d.fl||0));if(!m)return;
+      let mm=m;
+      if(d.fm&&has(seat,'formation')&&G.bonus==null){const grp=formationGroup(m);if(grp.length)mm=Object.assign({},m,{grp});}
+      commit(mm,m.pr&&'QMRBN'.includes(d.pr)?d.pr:'Q');return;
+    }
+    case 'sq':
+      if(G.tgt){if(G.tgt.c!==seat)return;tgtClick(d.i);flow();return;}
+      if(G.chute&&G.turn===seat){if(!doChute(d.i))G.chute=false;render();}
+      return;
+    case 'buy':if(G.turn!==seat||!ITEMS[d.b])return;buy(d.b);render();return;
+    case 'aug':if(!G.draft||G.draft.side!==seat)return;sfx('pick');pickAug(d.a);flow();return;
+    case 'abil':if(G.turn!==seat||typeof d.a!=='string')return;useAbility(d.a);flow();return;
+    case 'tgtCancel':if(G.tgt&&G.tgt.c===seat){cancelTgt();flow();}return;
+    case 'skip':if(G.turn===seat&&(G.bonus!=null||G.xt)){skipBonus();after();}return;
+    case 'brOk':if(G.reward&&G.reward.side===seat){G.reward=null;render();}return;
+  }
+}
+
+/* ---------- start / rematch / lobby transitions ---------- */
+function mpOnStart(env){
+  mpNote('lbNote','Starting…');
+  if(!MPS.host)return;
+  MPS.mid=Math.random().toString(36).slice(2,10);MPS.lastSent='';MPS.curMid=MPS.mid;
+  opts.human=MPS.seat>=0?MPS.seat:0;opts.env=env==='random'?null:env;
+  uiGo(()=>{start('mp');opts.env=null;mpUi();});
+}
+function mpRematch(){if(MPS.host)mpRaw({t:'lobby'});}
+function mpToLobby(){
+  uiFade(()=>{
+    closeAllMods();clearTimeout(aiTimer);clearTimeout(vsTimer);$('vsOv').hidden=true;$('mpBar').hidden=true;$('mpPause').hidden=true;
+    MPS.curMid=null;MPS.lastSent='';opts.mode='sim';show('menu');mview('mvLobby');bgStart();mpLobbyRender();
+  });
+}
+function mpOverUi(){
+  if(opts.mode!=='mp'){$('rematch').disabled=false;$('rematch').textContent='Play again';return;}
+  $('rematch').textContent=MPS.host?'Back to lobby':'Waiting for host…';$('rematch').disabled=!MPS.host;
+}
+
+/* ---------- in-game bar + pause overlay ---------- */
+function mpFmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function mpUi(){
+  const bar=$('mpBar'),r=MPS.room,inGame=opts.mode==='mp'&&!$('game').hidden;
+  if(!MPS.on||!r||!inGame){bar.hidden=true;$('mpPause').hidden=true;clearInterval(MPS.pauseT);return;}
+  const spec=r.members.filter(m=>!r.seats.includes(m.id)).length,me=MPS.seat;
+  bar.innerHTML=(me<0?'<b>Spectating</b>':'You: <b>'+SIDE[me]+'</b>')+' · '+mpName(0)+' vs '+mpName(1)+(spec?' · 👁 '+spec:'');
+  bar.hidden=false;
+  const ov=$('mpPause');
+  clearInterval(MPS.pauseT);
+  if(MPS.down){
+    $('mpPT').textContent='Connection lost';$('mpPD').textContent='Reconnecting to the room…';ov.hidden=false;
+  }else if(r.pause&&r.status==='playing'){
+    const pm=mpMember(r.pause.id),nm=pm?pm.name:'A player',tick=()=>{
+      $('mpPT').textContent='Game paused';
+      $('mpPD').textContent=nm+' disconnected. Waiting for them to rejoin with the key '+MPS.key+'. They forfeit in '+mpFmt(r.pause.until-Date.now())+'.';
+    };
+    tick();MPS.pauseT=setInterval(tick,500);ov.hidden=false;
+  }else ov.hidden=true;
+}
+$('mpPLeave').addEventListener('click',()=>{$('mpPause').hidden=true;mpLeave();uiToMenu();});
+
+/* ---------- menu: create / join / lobby ---------- */
+function mpNote(id,msg){const e=$(id);if(e)e.textContent=msg||'';}
+function mpName0(){const v=$('cuName').value.trim();mpStore('surgeName',v||null);return v;}
+function mpValidKey(k){return /^[A-Za-z0-9]{6}$/.test(k);}
+function mpBusy(on){for(const id of['cuCreate','cuJoin','cuRejoin'])$(id).disabled=on;}
+function mpEnter(d){
+  MPS.name=mpName0();mpBusy(false);mpNote('cuNote','');
+  mview('mvLobby');mpLobbyRender();
+}
+function mpCreate(){
+  mpBusy(true);mpNote('cuNote','Connecting… the free server can take ~30s to wake up.');
+  MPS.name=mpName0();
+  mpConnect({t:'create',name:MPS.name}).then(mpEnter).catch(e=>{mpBusy(false);mpNote('cuNote',e.message);});
+}
+function mpJoin(key,token){
+  if(!mpValidKey(key)){mpNote('cuNote','Keys are 6 letters/numbers (case matters).');return;}
+  mpBusy(true);mpNote('cuNote','Connecting… the free server can take ~30s to wake up.');
+  MPS.name=mpName0();
+  mpConnect({t:'join',key,token,name:MPS.name}).then(mpEnter).catch(e=>{mpBusy(false);mpNote('cuNote',e.message);});
+}
+function mpCopy(txt,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Copied';setTimeout(()=>{btn.textContent=o;},1400);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fb());}else fb();
+  function fb(){const t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}t.remove();}
+}
+const ENV_NAME={random:'Random',volcano:'Volcano',sky:'Sky Island',rain:'Rainforest'};
+function mpLobbyRender(){
+  const r=MPS.room;if(!r||$('mvLobby').hidden)return;
+  $('lbKey').textContent=r.key;
+  const me=MPS.you,host=MPS.host,lobby=r.status==='lobby';
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  for(const s of[0,1]){
+    const id=r.seats[s],m=id&&mpMember(id),el=$('seat'+s);
+    el.className='seat'+(id===me?' me':'')+(m&&!m.online?' off':'');
+    let h='<span class="sd">'+SIDE[s]+'</span>';
+    if(m){
+      h+='<span class="sn">'+esc(m.name)+(id===r.host?'<i>HOST</i>':'')+(id===me?'<i>YOU</i>':'')+(m.online?'':'<i>OFFLINE</i>')+'</span>';
+      if(lobby&&id===me)h+='<button type="button" class="btn" data-seat="-1">Stand up</button>';
+      else if(lobby&&host&&id!==me)h+='<button type="button" class="btn" data-kick="'+id+'">Kick</button>';
+    }else{
+      h+='<span class="sn" style="opacity:.55">Open</span>';
+      h+=lobby?'<button type="button" class="btn" data-seat="'+s+'">Take '+SIDE[s]+'</button>':'';
+    }
+    el.innerHTML=h;
+  }
+  const specs=r.members.filter(m=>!r.seats.includes(m.id));
+  $('lbSpecN').textContent=specs.length+'/'+r.max;
+  $('lbSpec').innerHTML=specs.length?specs.map(m=>'<li><span>'+esc(m.name)+(m.id===r.host?' <i style="font-style:normal;color:#ffd45e;font-size:11px">HOST</i>':'')+(m.id===me?' <i style="font-style:normal;color:#ffd45e;font-size:11px">YOU</i>':'')+(m.online?'':' (offline)')+'</span>'+(host&&m.id!==me&&lobby?'<button type="button" class="btn" data-kick="'+m.id+'">Kick</button>':'')+'</li>').join(''):'<li class="none">Nobody watching yet</li>';
+  $('lbEnvRow').hidden=false;
+  $('lbEnvV').textContent=ENV_NAME[r.env]||'';
+  for(const b of $('lbEnv').children){b.setAttribute('aria-pressed',b.dataset.v===r.env?'true':'false');b.disabled=!host||!lobby;}
+  const both=r.seats[0]!=null&&r.seats[1]!=null;
+  const st=$('lbStart');st.hidden=!host;st.disabled=!(lobby&&both);
+  st.firstChild.textContent=lobby?'Start match':'Match running';
+  $('lbNote').textContent=!lobby?(r.status==='playing'?'A match is in progress…':'Waiting for the host to go back to the lobby…'):host?(both?'Both seats filled. Start when ready.':'Fill both seats to start. Join the white or black slot, or wait for someone to take it.'):(both?'Waiting for the host to start…':'Take a seat, or stay as a spectator.');
+}
+function mpInit(){
+  const nm=mpStore('surgeName');if(nm)$('cuName').value=nm;
+  $('cuCreate').addEventListener('click',mpCreate);
+  $('cuJoin').addEventListener('click',()=>mpJoin($('cuKey').value.trim()));
+  $('cuKey').addEventListener('keydown',e=>{if(e.key==='Enter')mpJoin($('cuKey').value.trim());e.stopPropagation();});
+  $('cuName').addEventListener('keydown',e=>e.stopPropagation());
+  $('cuRejoin').addEventListener('click',()=>{try{const s=JSON.parse(mpStore('surgeMp'));mpJoin(s.key,s.token);}catch(e){}});
+  $('lbCopy').addEventListener('click',()=>mpCopy(MPS.key,$('lbCopy')));
+  $('lbLink').addEventListener('click',()=>mpCopy(location.origin+location.pathname+'?room='+MPS.key,$('lbLink')));
+  $('lbLeave').addEventListener('click',()=>{mpLeave();mview('mvPlay');sfx('uiback');});
+  $('lbStart').addEventListener('click',()=>mpRaw({t:'start'}));
+  $('lbEnv').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&MPS.host)mpRaw({t:'set',env:b.dataset.v});});
+  $('mvLobby').addEventListener('click',e=>{
+    const s=e.target.closest('[data-seat]');if(s){mpRaw({t:'seat',s:Number(s.dataset.seat)});return;}
+    const k=e.target.closest('[data-kick]');if(k)mpRaw({t:'kick',id:k.dataset.kick});
+  });
+  /* show "rejoin" if this tab still holds a room token; prefill key from ?room= links */
+  const q=/[?&]room=([A-Za-z0-9]{6})/.exec(location.search);
+  const saved=(()=>{try{return JSON.parse(mpStore('surgeMp'));}catch(e){return null;}})();
+  if(saved&&saved.key){$('cuRejoin').hidden=false;$('cuRejoin').firstChild.textContent='Rejoin '+saved.key;}
+  if(q){$('cuKey').value=q[1];setTimeout(()=>{if(!$('menu').hidden){mview('mvCustom');mpNote('cuNote','Press Join room to enter '+q[1]+'.');}},50);}
+}
+mpInit();
 
 })();
 </script>

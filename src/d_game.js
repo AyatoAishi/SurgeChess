@@ -80,6 +80,8 @@ const BOSS_MAX={V:5,D:7,K:6},BOSS_NAME={V:'Vanguard',D:'Dragon',K:'Kraken'};
 const ENVS=['volcano','sky','rain'];
 const safeRow=r=>r===homeRow(0)||r===pawnRow(0)||r===homeRow(1)||r===pawnRow(1);
 const isAI=c=>opts.mode==='sim'||(opts.mode==='ai'&&c!==opts.human);
+const locked=c=>isAI(c)||(opts.mode==='mp'&&mpSeat()!==c);   // true when the local player may not act for side c
+const MPG=()=>opts.mode==='mp'&&!mpIsHost();                  // online guest: forwards actions to the host instead of running them
 const lvlOf=c=>G&&G.bg?G.bgLv[c]:opts.mode==='sim'?opts.lv[c]:opts.level;
 
 function newStats(){return{k:[{},{}],d:[{},{}],cl:[{},{}],orbs:[{},{}],buys:[{},{}],gold:[0,0],sac:[0,0],gm:[0,0],str:[0,0],ft:[0,0],contest:[0,0],slam:0,tp:null,lead:0,mateBy:null};}
@@ -89,7 +91,7 @@ function newGame(){
   setN(10);
   G={b:newBoard(),pw:Array(N*N).fill(null),gold:[5,0],aug:[[],[]],used:[{},{}],draft:null,draftQ:[],fire:null,portals:null,inv:[{turret:0,polarity:0,archer:0,ram:0},{turret:0,polarity:0,archer:0,ram:0}],mv:[],xu:false,xt:false,cd:[{},{}],boss:{on:false,done:false,sq:-1,hits:[0,0],kind:null,max:5,nextAt:80,act:0},df:[],baby:[],babyQ:[],fort:[0,0],gm:[],orbMem:0,stats:newStats(),killer:null,streak:[0,0],burn:[null,null],fb:false,tgt:null,rezQ:[],meteors:[],mines:[],hist:[],ban:null,env:(opts.env&&ENVS.includes(opts.env))?opts.env:(/[?&]env=(\w+)/.exec(location.search)||[])[1]&&ENVS.includes((/[?&]env=(\w+)/.exec(location.search)||[])[1])?(/[?&]env=(\w+)/.exec(location.search)||[])[1]:ENVS[rnd(ENVS.length)],cr:[],pd:[],bonusNoCap:false,rz:[0,0],chute:false,orbSeq:Array(N*N).fill(0),orbN:0,nextOrb:ORB_MIN+rnd(ORB_MAX-ORB_MIN+1),ep:null,turn:0,ply:0,bonus:null,over:null,overHidden:false,
      last:null,sel:null,selMoves:[],promo:null,fx:[],overFx:false,freshP:new Set(),freshO:new Set(),log:[],legal:[],thinking:false,
-     flip:opts.mode==='ai'&&opts.human===1};
+     flip:(opts.mode==='ai'||opts.mode==='mp')&&opts.human===1};
   ENG.cp=[false,false];ENG.ag=[false,false];ENG.ply=0;ENG.fire=false;
   refreshLegal();
 }

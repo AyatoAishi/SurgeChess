@@ -18,6 +18,7 @@ function unitsHtml(){
 }
 
 function render(){
+  if(opts.mode==='mp')mpBroadcast();
   const flip=G.flip,dest=new Map(G.selMoves.map(m=>[m.t,m]));
   const chkSq=inCheck(stOf())?kingSq(G.b,G.turn):-1;
   const tgtV=G.tgt?G.tgt.valid:null,mtSet=new Set(),mtCtr=new Set();for(const m of G.meteors){mtCtr.add(m.sq);for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const rr=rowOf(m.sq)+dr,cc=colOf(m.sq)+dc;if(rr>=0&&rr<N&&cc>=0&&cc<N)mtSet.add(rr*N+cc);}}
@@ -38,13 +39,14 @@ function render(){
     if(G.overDelay)setTimeout(()=>{if(G!==g0)return;g0.overDelay=0;render();},G.overDelay);
   }
 
-  const ai=isAI(G.turn)&&!G.over;
+  const ai=isAI(G.turn)&&!G.over,lk=locked(G.turn)&&!G.over;
   $('tdot').className='tdot '+(G.turn===0?'w':'b');
   let tt=SIDE[G.turn]+' to move';
   if(G.over)tt='Game over';
   else if(G.xt)tt=SIDE[G.turn]+': extra move (different piece)';
   else if(G.bonus!=null)tt=SIDE[G.turn]+': bonus move';
   else if(ai)tt='Computer is thinking';
+  if(opts.mode==='mp'&&!G.over&&!G.xt&&G.bonus==null)tt=mpTurnTxt();
   $('turnTxt').textContent=tt;
   $('chkTxt').textContent=!G.over&&chkSq>=0?'Check':'';
   $('surgeTxt').textContent='Orbs '+G.pw.filter(Boolean).length+'/'+MAX_ORBS+' · White '+G.gold[0]+'g · Black '+G.gold[1]+'g';
@@ -52,7 +54,7 @@ function render(){
   renderShop();renderAug();
   driveDraft();
   $('log').innerHTML=G.log.slice(0,8).map(e=>'<li class="'+e.k+'">'+e.t+'</li>').join('');
-  $('skipBtn').hidden=!((G.bonus!=null||G.xt)&&!ai);
+  $('skipBtn').hidden=!((G.bonus!=null||G.xt)&&!lk);
 
   $('tgtBar').hidden=!G.tgt;
   if(G.tgt){const T={polar:G.tgt.step?'Polarity: pick the unit to swap with.':'Polarity: pick the first unit.',turret:'Turret: pick an empty tile touching one of your pieces.',ram:'Battering Ram: pick a free tile on your home rank.',archer:'Archer: pick an empty tile directly behind one of your pawns.',wall:'Castle Wall: pick an empty tile. A wall of up to 3 blocks is built across it.',deploy:'Deploy Pawn: pick the centre of a plus-shaped 5-pawn block on your half.',blink:G.tgt.step?'Phase Step: pick an empty square within 3 tiles.':'Phase Step: pick a piece to teleport.',meteor:'Falling Star: pick the centre of a 3×3 area on the enemy half.',frost:'Winter’s Grasp: pick the centre of a 3×3 area.',zhonya:"Frozen Moment: pick one of your pieces."};$('tgtTxt').textContent=T[G.tgt.kind];$('tgtCancel').textContent=G.tgt.forced?'Random spot':'Cancel';}
@@ -63,8 +65,9 @@ function render(){
   $('over').hidden=!G.over||G.overHidden||!!G.overDelay;
   if(G.over){
     const o=G.over;$('recap').innerHTML=recapHtml();
-    $('overTitle').textContent=o.type==='mate'?'Checkmate':o.type==='stalemate'?'Stalemate':'Draw';
-    $('overTxt').textContent=o.type==='mate'?SIDE[o.winner]+' wins'+(opts.mode==='ai'?(o.winner===opts.human?'. Nice one.':'. The computer got you.'):'.'):o.type==='stalemate'?SIDE[G.turn]+' has no legal move and is not in check.':'Only the two kings are left.';
+    $('overTitle').textContent=o.type==='mate'?'Checkmate':o.type==='stalemate'?'Stalemate':o.type==='forfeit'?'Forfeit':'Draw';
+    $('overTxt').textContent=o.type==='forfeit'?SIDE[o.winner]+' wins. The other player did not come back in time.':o.type==='mate'?SIDE[o.winner]+' wins'+(opts.mode==='ai'?(o.winner===opts.human?'. Nice one.':'. The computer got you.'):'.'):o.type==='stalemate'?SIDE[G.turn]+' has no legal move and is not in check.':'Only the two kings are left.';
+    mpOverUi();
   }
 }
 
@@ -90,7 +93,7 @@ function buildShop(){
 }
 function renderShop(){
   if(!shopBuilt)buildShop();
-  const c=G.turn,human=!isAI(c)&&canShop();
+  const c=G.turn,human=!locked(c)&&canShop();
   $('goldRow').innerHTML=[0,1].map(s=>'<span class="'+(c===s?'on':'')+'" data-s="'+s+'"><i class="coin"></i>'+SIDE[s]+' <b>'+G.gold[s]+'</b></span>').join('');
   for(const s of[0,1]){if(lastGold[s]>=0&&lastGold[s]!==G.gold[s]){const e=$('goldRow').querySelector('[data-s="'+s+'"]');if(e&&FX.on)e.animate([{transform:'scale(1)'},{transform:'scale(1.16)',offset:.35},{transform:'scale(1)'}],{duration:380,easing:'ease-out'});}lastGold[s]=G.gold[s];}
   for(const li of $('shopList').children){
@@ -137,14 +140,14 @@ function renderAug(){
     $('brCards').innerHTML=rw.keys.map(k=>{const a=AUG[k];return'<div class="augc t-'+a.t+'"><span class="aug-t">'+TIER[a.t]+'</span><span class="aug-i">'+a.i+'</span><strong>'+a.n+'</strong><span class="aug-d">'+a.d+'</span></div>';}).join('');}
   const d=G.draft;$('aug').hidden=!d;
   if(d){
-    const ai=isAI(d.side);
+    const ai=locked(d.side);
     $('augTitle').textContent=SIDE[d.side]+(ai?' is choosing an augment…':': choose an augment');
     $('augCards').innerHTML=d.opts.map(k=>{const a=AUG[k];return'<button type="button" class="augc t-'+a.t+'" data-k="'+k+'"'+(ai?' disabled':'')+'><span class="aug-t">'+TIER[a.t]+'</span><span class="aug-i">'+a.i+'</span><strong>'+a.n+'</strong><span class="aug-d">'+a.d+'</span></button>';}).join('');
   }
   const next=AUG_EVERY-(G.ply%AUG_EVERY);
   $('augList').innerHTML=[0,1].map(s=>'<div class="augrow"><b>'+SIDE[s]+'</b><span class="chips">'+(G.aug[s].length?G.aug[s].map(k=>'<span class="chip t-'+AUG[k].t+(AUG[k].act&&G.used[s][k]?' spent':'')+'" title="'+AUG[k].d.replace(/"/g,'&quot;')+'">'+AUG[k].i+' '+AUG[k].n+'</span>').join(''):'<em>none yet</em>')+'</span></div>').join('')+'<p class="fine">Next augment pick in '+next+' turns.</p>';
   const dc=$('dockAug');if(dc)dc.innerHTML=[0,1].map(sd=>G.aug[sd].map(k=>'<span title="'+SIDE[sd]+': '+AUG[k].n+'">'+AUG[k].i+'</span>').join('')).join('')||'<span style="opacity:.45">none</span>';
-  const c=G.turn,show=!isAI(c)&&!G.over,ab=show?G.aug[c].filter(k=>AUG[k].act&&!G.used[c][k]):[];
+  const c=G.turn,show=!locked(c)&&!G.over,ab=show?G.aug[c].filter(k=>AUG[k].act&&!G.used[c][k]):[];
   const tn=show?G.inv[c].turret:0,pn=show?G.inv[c].polarity:0,an=show?G.inv[c].archer:0,rn=show?G.inv[c].ram:0;
   const hasIt=!!(ab.length||tn||pn||an||rn);$('itemBar').hidden=!hasIt;$('game').classList.toggle('has-items',hasIt);
   const tur=tn?'<li><button type="button" class="item i-ab" data-a="turret" title="Place a turret next to any of your pieces"'+(canShop()?'':' disabled')+'><span class="ico">'+ICON.t+'</span><span class="txt"><strong>Turret x'+tn+'</strong><span class="d">Place beside an ally. 25% auto-shot per turn in its 5×5 box, 3 shots.</span></span><span class="price"><b>Place</b></span></button></li>':'';
@@ -166,7 +169,7 @@ function whyIllegal(f,t){
 }
 function select(i){G.sel=i;G.selMoves=G.legal.filter(m=>m.f===i);}
 function after(){
-  if(!G.over&&G.bonus!=null&&!isAI(G.turn))select(G.bonus);
+  if(!G.over&&G.bonus!=null&&!locked(G.turn))select(G.bonus);
   render();
   clearTimeout(aiTimer);
   if(!G.over&&isAI(G.turn)){
@@ -174,16 +177,20 @@ function after(){
     aiTimer=setTimeout(aiStep,wait*(G.bg?.85:opts.mode==='sim'?(opts.spd||1):1));
   }
 }
-function commit(m,t){play(m,t);after();}
+function commit(m,t){
+  if(MPG()){mpSend({k:'play',f:m.f,t:m.t,fl:m.fl||0,pr:t,fm:m.grp?1:0});G.sel=null;G.selMoves=[];G.promo=null;render();return;}
+  play(m,t);after();
+}
 
 function onSquare(i){
   if(G&&G.holdUntil&&performance.now()<G.holdUntil)return;
   if(!G||G.over||G.promo||G.draft||G.reward||G.paused||G.bg)return;
   if(adminSquare(i))return;
-  if(G.tgt){if(isAI(G.tgt.c))return;if(!tgtClick(i))toastFn('Pick one of the highlighted squares.','n');flow();return;}
-  if(isAI(G.turn))return;
-  if(G.bonus!=null&&G.bonusNoCap&&i===G.bonus){skipBonus();after();return;}
+  if(G.tgt){if(locked(G.tgt.c))return;if(MPG()){mpSend({k:'sq',i});return;}if(!tgtClick(i))toastFn('Pick one of the highlighted squares.','n');flow();return;}
+  if(locked(G.turn))return;
+  if(G.bonus!=null&&G.bonusNoCap&&i===G.bonus){if(MPG()){mpSend({k:'skip'});return;}skipBonus();after();return;}
   if(G.chute){
+    if(MPG()){mpSend({k:'sq',i});return;}
     if(!doChute(i)){G.chute=false;toastFn('Parachute cancelled. Pick a highlighted square next time.','n');}
     render();return;
   }
@@ -287,7 +294,7 @@ function showVs(){
   const o=$('vsOv');if(!o||!G||G.bg)return;
   const E=ENV_INFO[G.env];if(!E)return;
   const lvT=c=>'AI · LV '+lvNum(lvlOf(c));
-  $('vsA').textContent=opts.mode==='ai'?(opts.human===0?'YOU':lvT(0)):opts.mode==='sim'?lvT(0):SIDE[0].toUpperCase();$('vsB').textContent=opts.mode==='ai'?(opts.human===1?'YOU':lvT(1)):opts.mode==='sim'?lvT(1):SIDE[1].toUpperCase();
+  $('vsA').textContent=opts.mode==='mp'?mpName(0).toUpperCase():opts.mode==='ai'?(opts.human===0?'YOU':lvT(0)):opts.mode==='sim'?lvT(0):SIDE[0].toUpperCase();$('vsB').textContent=opts.mode==='mp'?mpName(1).toUpperCase():opts.mode==='ai'?(opts.human===1?'YOU':lvT(1)):opts.mode==='sim'?lvT(1):SIDE[1].toUpperCase();
   $('vsEi').textContent=E.i;$('vsEn').textContent=E.n;$('vsEd').textContent=E.d;
   o.style.setProperty('--vsc',E.c);o.style.setProperty('--vs1',E.a);o.style.setProperty('--vs2',E.b);
   o.classList.remove('out');o.hidden=false;G.holdUntil=performance.now()+3300;
@@ -301,18 +308,18 @@ $('promoBtns').addEventListener('click',e=>{
   const m=G.promo;G.promo=null;commit(m,b.dataset.t);
 });
 $('promoCancel').addEventListener('click',()=>{G.promo=null;render();});
-$('shopList').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G||isAI(G.turn))return;const k=b.dataset.k,ok=buy(k);if(ok&&k!=='ch')shopFx(b,k);render();});
-$('augCards').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G.draft||isAI(G.draft.side))return;sfx('pick');pickAug(b.dataset.k);flow();});
-$('abilList').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b||!G||isAI(G.turn))return;useAbility(b.dataset.a);flow();});
-$('tgtCancel').addEventListener('click',()=>{if(G&&G.tgt){cancelTgt();flow();}});
-$('skipBtn').addEventListener('click',()=>{if((G.bonus!=null||G.xt)&&!isAI(G.turn)){skipBonus();after();}});
-$('rematch').addEventListener('click',()=>uiFade(()=>start(opts.mode)));
+$('shopList').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G||locked(G.turn))return;const k=b.dataset.k;if(MPG()){mpSend({k:'buy',b:k});return;}const ok=buy(k);if(ok&&k!=='ch')shopFx(b,k);render();});
+$('augCards').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b||!G.draft||locked(G.draft.side))return;sfx('pick');if(MPG()){mpSend({k:'aug',a:b.dataset.k});return;}pickAug(b.dataset.k);flow();});
+$('abilList').addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b||!G||locked(G.turn))return;if(MPG()){mpSend({k:'abil',a:b.dataset.a});return;}useAbility(b.dataset.a);flow();});
+$('tgtCancel').addEventListener('click',()=>{if(G&&G.tgt){if(locked(G.tgt.c))return;if(MPG()){mpSend({k:'tgtCancel'});return;}cancelTgt();flow();}});
+$('skipBtn').addEventListener('click',()=>{if((G.bonus!=null||G.xt)&&!locked(G.turn)){if(MPG()){mpSend({k:'skip'});return;}skipBonus();after();}});
+$('rematch').addEventListener('click',()=>{if(opts.mode==='mp'){mpRematch();return;}uiFade(()=>start(opts.mode));});
 $('overMenu').addEventListener('click',()=>uiToMenu());
 $('overView').addEventListener('click',()=>{G.overHidden=true;render();});
 
 $('v3Reset').addEventListener('click',()=>{v3ResetCam();});
 v3Boot();
-$('brOk').addEventListener('click',()=>{if(G){G.reward=null;render();}});
+$('brOk').addEventListener('click',()=>{if(!G||!G.reward||locked(G.reward.side))return;if(MPG()){mpSend({k:'brOk'});return;}G.reward=null;render();});
 $('fmGo').addEventListener('click',()=>{const f=G.fm;$('fmModal').hidden=true;G.fm=null;if(f)commit(Object.assign({},f.m,{grp:f.grp}),'Q');});
 $('fmSolo').addEventListener('click',()=>{const f=G.fm;$('fmModal').hidden=true;G.fm=null;if(f)commit(f.m,'Q');});
 $('fmCancel').addEventListener('click',()=>{$('fmModal').hidden=true;G.fm=null;render();});
