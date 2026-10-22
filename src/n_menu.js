@@ -187,7 +187,7 @@ function wireModals(){
   $('pmHelp').addEventListener('click',()=>{$('pauseM').hidden=true;openMod('helpM','pause');});
   $('pmLeave').addEventListener('click',()=>{$('pauseM').hidden=true;openMod('leaveM');});
   $('lvNo').addEventListener('click',()=>{$('leaveM').hidden=true;$('pauseM').hidden=false;sfx('uiback');});
-  $('lvYes').addEventListener('click',()=>{$('leaveM').hidden=true;uiToMenu();});
+  $('lvYes').addEventListener('click',()=>{$('leaveM').hidden=true;adminShow(false);adminBadge(false);uiToMenu();});
 }
 
 /* ---------- help ---------- */
@@ -241,6 +241,7 @@ function onKey(e){
     if(!$('setM').hidden){closeMod('setM');return;}
     if(!$('helpM').hidden){closeMod('helpM');return;}
     if(!$('simM').hidden){closeMod('simM');if(!$('menu').hidden&&!simRun)bgStart();return;}
+    if(adminOpen()){adminShow(false);return;}
     if(!$('pauseM').hidden){closeMod('pauseM');return;}
     if(inGame){if(!$('shopPanel').hidden||!$('augPanel').hidden){togglePanel('shop',false);togglePanel('aug',false);return;}openPause();return;}
     if(!$('menu').hidden&&$('mvMain').hidden){const bk=$('menu').querySelector('.mview:not([hidden]) .back');if(bk)bk.click();}
@@ -250,7 +251,7 @@ function onKey(e){
   if(!inGame||modalOpen())return;
   e.preventDefault();
   if(act==='shop')togglePanel('shop');
-  else if(act==='aug')togglePanel('aug');
+  else if(act==='aug'){if(!adminKeyAug())togglePanel('aug');}
   else if(act==='log')$('hudLog').classList.toggle('off');
   else if(act==='cam')v3ResetCam();
   else if(act==='skip'){if(!$('skipBtn').hidden)$('skipBtn').click();}
@@ -316,7 +317,7 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   try{const f=store('surgeFx');if(f==='0')FX.on=false;opts.killcam=store('surgeKc')!=='0';}catch(e){}
   wireMenu();wireModals();updKeyHints();
   $('dkShop').addEventListener('click',()=>togglePanel('shop'));
-  $('dkAug').addEventListener('click',()=>togglePanel('aug'));
+  $('dkAug').addEventListener('click',()=>{if(!adminKeyAug())togglePanel('aug');});
   document.addEventListener('keydown',onKey);
   try{const q=store('surgeQ');if(q&&q!=='auto')setTimeout(()=>v3Quality(q),0);}catch(e){}
   drawLogo(0);
@@ -366,4 +367,4 @@ function lowfpsShow(why,fps){
   requestAnimationFrame(tick);
   setTimeout(()=>{if(V3&&V3.soft)lowfpsShow('soft');},2500);
 })();
-if(/[?&]debug/.test(location.search))window.SCdbg={fn:{spawnBoss,bossAttacked,dragonFly,krakenAttack,babyTick,bossWin,bossTick,dragonBreath,onFire,endTurn,refreshLegal,startTgt,tgtClick,buy,useAbility,ramTick,turretFire,mk,legal,stOf,finishTurn,pickAug,has,aiExtra,igniteZone},sync:()=>sync3d(),play:(m)=>{play(m,"Q");after();},start:(m)=>start(m),opts:()=>opts,AIW:()=>AIW,R:()=>V3R,sqX:(i)=>sqX(i),sqZ:(i)=>sqZ(i),por:(t,c)=>portraitURL(t,c),rl:()=>refreshLegal(),G:()=>G,render:()=>render(),N:()=>N,mv:(i)=>{select(i);return G.selMoves.map(m=>m.t);},ENG,NAMES};
+if(/[?&]debug/.test(location.search))window.SCdbg={fn:{onSquare,adminKeyAug,adminShow,spawnBoss,bossAttacked,dragonFly,krakenAttack,babyTick,bossWin,bossTick,dragonBreath,onFire,endTurn,refreshLegal,startTgt,tgtClick,buy,useAbility,ramTick,turretFire,mk,legal,stOf,finishTurn,pickAug,has,aiExtra,igniteZone},sync:()=>sync3d(),play:(m)=>{play(m,"Q");after();},start:(m)=>start(m),opts:()=>opts,AIW:()=>AIW,R:()=>V3R,sqX:(i)=>sqX(i),sqZ:(i)=>sqZ(i),por:(t,c)=>portraitURL(t,c),rl:()=>refreshLegal(),G:()=>G,render:()=>render(),N:()=>N,mv:(i)=>{select(i);return G.selMoves.map(m=>m.t);},ENG,NAMES};

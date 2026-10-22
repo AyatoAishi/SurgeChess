@@ -179,6 +179,7 @@ function commit(m,t){play(m,t);after();}
 function onSquare(i){
   if(G&&G.holdUntil&&performance.now()<G.holdUntil)return;
   if(!G||G.over||G.promo||G.draft||G.reward||G.paused||G.bg)return;
+  if(adminSquare(i))return;
   if(G.tgt){if(isAI(G.tgt.c))return;if(!tgtClick(i))toastFn('Pick one of the highlighted squares.','n');flow();return;}
   if(isAI(G.turn))return;
   if(G.bonus!=null&&G.bonusNoCap&&i===G.bonus){skipBonus();after();return;}
@@ -269,6 +270,7 @@ function show(which){
   if(typeof v3Menu==='function')v3Menu(which==='menu');
 }
 function start(mode){
+  if(typeof adminShow==='function'){adminShow(false);adminBadge(false);}
   opts.mode=mode;
   clearTimeout(aiTimer);
   newGame();G.killcam=opts.killcam!==false;v3Reset();show('game');after();
